@@ -9,6 +9,7 @@ write("\nLocation : ");
 
 stdin.addListener("data", (data) => {
   const input = String(data).trim();
+  const playern = turn === 'O' ? '1' : '2'
   if (input === "quit") process.exit();
   if (!/\(\d,( |)\d\)/.test(input)) {
     locationWrite("Invaild location. e.g) (1, 2)");
@@ -19,14 +20,18 @@ stdin.addListener("data", (data) => {
     locationWrite("Invaild location. e.g) (1, 2)");
     return;
   }
+  if (board[position[1]-1][position[0]-1] !== ' ') {
+    locationWrite("It's where it's already been placed.");
+    return;
+  }
   board[position[1]-1][position[0]-1] = turn;
   printBoard();
-  if (checkWin(turn)) {
-    write(`Winner is ${turn}`)
-    process.exit();
-  }
+
+  if (checkDraw()) exitProcess("Draw...");
+  else if (checkWin(turn)) exitProcess(`Winner is player ${playern}.`);
+
   turn = turn === 'O' ? 'X' : 'O';
-  locationWrite(`Now it's player ${turn === 'O' ? '1' : '2'}'s turn.`);
+  locationWrite(`Now it's player ${playern}'s turn.`);
 });
 
 process.on("exit", () => {
@@ -36,6 +41,11 @@ process.on("exit", () => {
 function printBoard() {
   clearScreen();
   write(board.map(tiles => tiles.map(tile => ` ${tile} `).join('|')).join('\n-----------\n'));
+}
+
+function exitProcess(content: string) {
+  write(content);
+  process.exit();
 }
 
 function locationWrite(content: string = '') {
@@ -65,4 +75,8 @@ function checkWin(t: string) {
   }
 
   return checkRows(board) || checkRows(lines) || checkRow(filteringBoard(idx => idx)) || checkRow(filteringBoard(idx => Math.max(2-idx, 0)));
+}
+
+function checkDraw() {
+  return !checkWin('O') && !checkWin('X') && board.every(tiles => tiles.every(tile => tile !== ' '));
 }
